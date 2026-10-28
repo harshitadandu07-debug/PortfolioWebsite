@@ -1,15 +1,16 @@
 import Hero from "@/components/home/Hero";
 import Projects from "@/components/home/Projects";
 import Testimonials from "@/components/home/Testimonials";
-import ContactFooter from "@/components/layout/ContactFooter";
+import HomeFooter from "@/components/layout/HomeFooter";
 
 export default function Home() {
   return (
     <main>
-      <Hero />
-      <Projects />
-      <Testimonials />
-      <ContactFooter />
+      <HomeFooter>
+        <Hero />
+        <Projects />
+        <Testimonials />
+      </HomeFooter>
     </main>
   );
 }

@@ -10,7 +10,7 @@ export default function CaseStudyPage({ data, nextHref }: { data: CaseStudyData;
   return (
     <main className="bg-white">
       {hero && (
-        <section className="relative w-full overflow-hidden" style={{ height: hero.h }}>
+        <section className="relative w-full overflow-hidden" style={{ height: hero.h, background: hero.gradient ?? undefined }}>
           {hero.layers.map((l, i) =>
             l.w > 1400 ? (
               <Image key={i} src={l.src} alt="" fill sizes="100vw" priority className="object-cover" />
@@ -36,13 +36,13 @@ export default function CaseStudyPage({ data, nextHref }: { data: CaseStudyData;
         <RichText html={next.heading} style={next.headingStyle} className="m-0 text-center" />
         {next.image && next.imageSize && (
           <Link href={nextHref} className="block" style={{ marginTop: next.imageGap, width: next.imageSize[0] }}>
-            <Image src={next.image} alt="" width={next.imageSize[0]} height={next.imageSize[1]} />
+            <Image src={next.image} alt="" width={next.imageSize[0]} height={next.imageSize[1]} className="block" />
             {next.titleStyle && <RichText html={next.title} style={next.titleStyle} className="m-0" extra={{ marginTop: next.titleGap }} />}
             {next.tagsStyle && <RichText html={next.tags} style={next.tagsStyle} className="m-0" extra={{ marginTop: next.tagsGap }} />}
           </Link>
         )}
       </section>
-      <ContactFooter caseStudy />
+      <ContactFooter />
     </main>
   );
 }

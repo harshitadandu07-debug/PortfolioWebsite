@@ -1,0 +1,26 @@
+/* Home footer reveal. Classes are prefixed `hf-` (the project's next.config.ts turns CSS Modules off, so the
+   prefix is what keeps these from colliding with anything else). */
+
+/* Reduced motion: no fixed layer and no lifting page. The blue footer is just the last section of the page. */
+@media (prefers-reduced-motion: reduce) {
+  .hf-curve {
+    display: none;
+  }
+  .hf-blue {
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 48px 0 24px;
+  }
+  .hf-scene {
+    position: static !important;
+  }
+  .hf-made,
+  .hf-links {
+    position: static !important;
+    margin: 20px 16px 0;
+  }
+  .hf-links {
+    margin-top: 8px;
+  }
+}
