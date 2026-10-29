@@ -3,7 +3,7 @@
 import { animate, useAnimationFrame, useMotionValue, type MotionValue } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PostcardPhase } from "../components/PostcardForm";
-import { AFTER_DELIVERY, TIMING, noseForSrc, type DogAnimation, type GirlAnimation, type SceneLayout, type SpriteFrame } from "../utils/animationConfig";
+import { TIMING, noseForSrc, type DogAnimation, type GirlAnimation, type SceneLayout, type SpriteFrame } from "../utils/animationConfig";
 import type { MessagePayload, SubmitMessage } from "../utils/mockSubmit";
 import { DOG_CANVAS, DOG_NOSE } from "../utils/spriteManifest";
 
@@ -81,8 +81,9 @@ export function useDeliverySequence({ layout, submit, reducedMotion }: Options) 
   const girlDone = useRef<(() => void) | null>(null);
   const carrying = useRef(false);
   const heading = useRef(1); // which way the dog is running: 1 right, -1 left
-  const asleep = useRef(false); // the dog is curled up at her feet (AFTER_DELIVERY "sleep")
-  const nose = useRef<readonly [number, number]>(DOG_NOSE["stand-look"]);
+  const coffee = useRef(false); // she is sipping her coffee, laptop set aside
+  const asleep = useRef(false); // the dog is asleep at her feet
+  const nose = useRef<readonly [number, number]>(DOG_NOSE["sit-1"]);
   const dogMove = useRef<{ stop: () => void } | null>(null); // the dog's current run, so a new message can cancel it
   const moveDog = useCallback(
     (to: number, options: { duration: number; ease: readonly [number, number, number, number] }) => {
@@ -137,11 +138,13 @@ export function useDeliverySequence({ layout, submit, reducedMotion }: Options) 
     const s = L.dog.scale;
     return { x: x + (n[0] - 22 - DOG_CANVAS.centerX) * s, y: L.dog.feetY - DOG_CANVAS.baseline * s + (n[1] + 30) * s + y };
   };
-  // The envelope is held in the mouth: its right-hand end is between the jaws.
+  // The envelope is held by its left edge between the jaws and hangs out in front of the muzzle, not over the face.
   const held = (m: { x: number; y: number }) => {
     const L = layoutRef.current;
-    return { x: m.x - L.envelope.w * 0.3, y: m.y - L.envelope.h * 0.12 };
+    return { x: m.x + L.envelope.w * 0.36, y: m.y + L.envelope.h * 0.2 };
   };
+  // On the catch the paper's centre eases from where the airplane ended onto the mouth (offset shrinks 1 -> 0).
+  const carryOffset = useRef({ x: 0, y: 0, k: 0 });
 
   // Every frame: the run's stride follows the dog's real speed (so feet never skate), it bobs and leans into
   // the run, and a carried envelope stays in its mouth.
@@ -155,8 +158,9 @@ export function useDeliverySequence({ layout, submit, reducedMotion }: Options) 
     dogY.set(dogHop.get() + bob);
     if (carrying.current) {
       const p = held(mouth(dogX.get(), nose.current, dogY.get()));
-      paper.cx.set(p.x);
-      paper.cy.set(p.y);
+      const o = carryOffset.current;
+      paper.cx.set(p.x + o.x * o.k);
+      paper.cy.set(p.y + o.y * o.k);
     }
   });
 
@@ -166,6 +170,10 @@ export function useDeliverySequence({ layout, submit, reducedMotion }: Options) 
       running.current = true;
       const L = layoutRef.current;
       dogMove.current?.stop(); // a dog still trotting home from the last message stops where it is...
+      girlDone.current = null;
+      coffee.current = false;
+      asleep.current = false;
+      setGirlAnim("idle"); // ...she is back at her laptop...
       dogX.set(L.dog.restX); // ...and is at its post for this one
       dogOpacity.set(1);
       dogHop.set(0);
@@ -226,7 +234,8 @@ export function useDeliverySequence({ layout, submit, reducedMotion }: Options) 
 
         // ...and folds into a paper airplane that turns toward the dog and lifts off.
         const hopH = 30 * L.dog.scale * 1.6; // how high the dog jumps for the catch
-        const target = mouth(L.dog.restX, DOG_NOSE["stand-look"], -hopH); // where the mouth is at the top of the jump
+        const mouthTop = mouth(L.dog.restX, DOG_NOSE["leap"], -hopH); // where the mouth is at the top of the jump
+        const target = { x: mouthTop.x + L.plane.w * 0.42, y: mouthTop.y + 2 }; // the airplane arrives nose-first: its tip reaches the mouth
         const start = { x: paper.cx.get(), y: paper.cy.get() - 30 * L.girl.scale };
         const flip = target.x < start.x ? -1 : 1; // the airplane is drawn pointing right: mirror it to fly left
         const ctrl = { x: start.x + (target.x - start.x) * 0.5, y: Math.min(start.y, target.y) - 70 * L.girl.scale };
@@ -251,10 +260,12 @@ export function useDeliverySequence({ layout, submit, reducedMotion }: Options) 
         setPhase("AIRPLANE_FLYING");
         const dogPrep = (async () => {
           await wait(TIMING.flight - TIMING.crouchBefore, id);
-          await animate(dogSquash, 0.9, { duration: TIMING.crouchBefore - TIMING.jumpBefore, ease: EASE_OUT });
+          setDog({ mode: "crouch", flipped: false });
+          await animate(dogSquash, 0.96, { duration: TIMING.crouchBefore - TIMING.jumpBefore, ease: EASE_OUT });
+          setDog({ mode: "jump", flipped: false });
           await Promise.all([
             animate(dogHop, -hopH, { duration: TIMING.jumpBefore, ease: [0.15, 0.7, 0.35, 1] }),
-            animate(dogSquash, [0.9, 1.07, 1.03], { duration: TIMING.jumpBefore, ease: "easeOut" }),
+            animate(dogSquash, [0.96, 1.04, 1], { duration: TIMING.jumpBefore, ease: "easeOut" }),
           ]);
         })();
         await animate(0, 1, {
@@ -276,16 +287,19 @@ export function useDeliverySequence({ layout, submit, reducedMotion }: Options) 
         // 3. The dog catches it at the top of its jump: the airplane becomes an envelope in its mouth, and the dog lands.
         setPhase("DOG_CATCHING");
         setDog({ mode: "catch", flipped: false });
-        nose.current = DOG_NOSE["stand-look"];
+        nose.current = DOG_NOSE["leap"];
+        const heldNow = held(mouth(dogX.get(), nose.current, dogY.get()));
+        carryOffset.current = { x: paper.cx.get() - heldNow.x, y: paper.cy.get() - heldNow.y, k: 1 };
         carrying.current = true; // from here the envelope follows the dog's mouth, frame by frame
         paper.flip.set(1);
         await Promise.all([
           animate(paper.morph, 2, { duration: TIMING.catchMorph, ease: EASE_IN_OUT }),
           animate(paper.w, L.envelope.w, { duration: TIMING.catchMorph, ease: EASE_IN_OUT }),
           animate(paper.h, L.envelope.h, { duration: TIMING.catchMorph, ease: EASE_IN_OUT }),
-          animate(paper.rotate, -4, { duration: TIMING.catchMorph, ease: EASE_IN_OUT }),
+          animate(paper.rotate, 8, { duration: TIMING.catchMorph, ease: EASE_IN_OUT }),
+          animate(carryOffset.current.k, 0, { duration: TIMING.catchMorph, ease: EASE_IN_OUT, onUpdate: (k) => (carryOffset.current.k = k) }),
           animate(dogHop, 0, { duration: 0.34, ease: EASE_IN }),
-          animate(dogSquash, [1.03, 0.93, 1], { duration: 0.4, ease: "easeOut", times: [0, 0.55, 1] }), // lands softly
+          wait(0.17, id).then(() => setDog({ mode: "crouch", flipped: false })), // lands softly, with the letter in its mouth
         ]);
         alive(id);
         await wait(TIMING.catchHold, id);
@@ -294,54 +308,61 @@ export function useDeliverySequence({ layout, submit, reducedMotion }: Options) 
         setPhase("DOG_RUNNING");
         heading.current = 1;
         setDog({ mode: "run", flipped: false });
+        // She hears it coming: the laptop is lifted, moved to her side, and her hands come to rest.
+        const settling = (async () => {
+          await wait(0.35, id);
+          await playGirl("settle");
+        })();
         const distance = L.dog.stopX - dogX.get();
         const runTime = clamp((distance / TIMING.runSpeed) * 1.22, 0.9, 2.6);
         await moveDog(L.dog.stopX, { duration: runTime, ease: [0.5, 0, 0.18, 1] });
         alive(id);
         setPhase("CHARACTER_NOTICING");
-        setDog({ mode: "stand", flipped: false }); // plants its feet: no sliding to a stop
-        await Promise.all([animate(dogLean, 0, { duration: 0.2 }), wait(0.26, id)]);
-
-        // 5. Hand-off: the sprite sheet's own frames show the dog, the envelope and the girl together. The standing
-        //    dog dissolves into them, so there is no pop and never two envelopes.
-        setPhase("LETTER_HANDOFF");
-        carrying.current = false;
-        setPaperVisible(false);
-        const handoff = playGirl("handoff");
-        await animate(dogOpacity, 0, { duration: 0.16 });
-        setDog({ mode: "hidden", flipped: false });
-        dogOpacity.set(1);
-        await handoff;
+        nose.current = DOG_NOSE["stand"];
+        setDog({ mode: "stand", flipped: false }); // plants its feet and looks up at her, the letter still in its mouth
+        await Promise.all([animate(dogLean, 0, { duration: 0.2 }), settling]);
         alive(id);
 
-        // 6. She pets the dog.
+        // 5. Hand-off: she looks down and reaches out to the dog's mouth. She takes the letter and lifts it, and her next
+        //    frame has the envelope in her hand, so the paper hands over to the sprite.
+        setPhase("LETTER_HANDOFF");
+        const take = playGirl("take");
+        await wait(0.78, id);
+        carrying.current = false;
+        const from = { x: paper.cx.get(), y: paper.cy.get() };
+        const inHand = { x: L.girl.left + 44 * L.girl.scale, y: L.girl.top + 192 * L.girl.scale };
+        await animate(0, 1, {
+          duration: 0.3,
+          ease: EASE_OUT,
+          onUpdate: (t) => {
+            paper.cx.set(from.x + (inHand.x - from.x) * t);
+            paper.cy.set(from.y + (inHand.y - from.y) * t - Math.sin(t * Math.PI) * 6 * L.girl.scale);
+            paper.rotate.set(8 - 8 * t);
+          },
+        });
+        alive(id);
+        setPaperVisible(false);
+        setDog({ mode: "sit", flipped: false });
+        await take;
+        await playGirl("receive"); // ...she opens it and reads
+        alive(id);
+
+        // 6. She puts the letter away and pets the dog, which lifts a paw.
         setPhase("PETTING");
+        setDog({ mode: "paw", flipped: false });
         await playGirl("pet");
         alive(id);
 
-        // 7. Delivered.
+        // 7. Delivered. She reaches for her coffee while the dog lies down at her feet and falls asleep.
         setPhase("DELIVERY_COMPLETE");
-        if (AFTER_DELIVERY === "sleep") {
-          asleep.current = true;
-          setGirlAnim("sleep"); // the dog curls up at her feet while she goes back to work
-          await wait(TIMING.confirmDelay, id);
-          setConfirmation(true);
-        } else {
-          dogOpacity.set(0);
-          setDog({ mode: "stand", flipped: false }); // the dog steps back from her side...
-          setGirlAnim("idle"); // ...and she goes back to typing
-          await animate(dogOpacity, 1, { duration: 0.16 });
-          await wait(TIMING.confirmDelay, id);
-          setConfirmation(true);
-          heading.current = -1;
-          setDog({ mode: "run", flipped: true });
-          await moveDog(L.dog.restX, { duration: TIMING.runBack, ease: [0.5, 0, 0.2, 1] });
-          alive(id);
-          setDog({ mode: "stand", flipped: false });
-          await Promise.all([animate(dogLean, 0, { duration: 0.2 }), wait(0.22, id)]);
-          heading.current = 1;
-          setDog({ mode: "idle", flipped: false });
-        }
+        coffee.current = true;
+        setGirlAnim("coffee");
+        setDog({ mode: "lie", flipped: false });
+        asleep.current = true;
+        await wait(1.7, id);
+        setDog({ mode: "sleep", flipped: false });
+        await wait(TIMING.confirmDelay, id);
+        setConfirmation(true);
         running.current = false;
       } catch (e) {
         if (e !== CANCELLED) throw e;
@@ -363,27 +384,26 @@ export function useDeliverySequence({ layout, submit, reducedMotion }: Options) 
     setError(null);
     setFormKey((k) => k + 1);
     setPostcard("opening");
-    setGirlAnim("idle");
     const L = layoutRef.current;
     try {
+      // The coffee goes down and the laptop comes back onto her knees, while the dog is already at its post.
+      if (coffee.current) {
+        coffee.current = false;
+        void playGirl("resume").then(() => runId.current === id && setGirlAnim("idle"));
+      } else setGirlAnim("idle");
       const wasAsleep = asleep.current;
       asleep.current = false;
-      if (wasAsleep) {
-        // The dog wakes up and gets to its feet beside her...
-        dogX.set(L.dog.stopX);
-        dogOpacity.set(0);
-        setDog({ mode: "stand", flipped: false });
-        await animate(dogOpacity, 1, { duration: 0.16 });
-      } else {
+      if (wasAsleep) setDog({ mode: "wake", flipped: false }); // the dog wakes up beside her...
+      else {
         dogX.set(L.dog.restX);
         setDog({ mode: "idle", flipped: false });
       }
-      // ...while the postcard is already back and ready to use: the form never waits for the dog.
+      // ...while the postcard is already back and ready to use: the form never waits for either of them.
       await wait(0.5, id);
       setPostcard("open");
       setPhase("IDLE");
       if (wasAsleep) {
-        await wait(0.3, id);
+        await wait(0.8, id);
         heading.current = -1;
         setDog({ mode: "run", flipped: true });
         await moveDog(L.dog.restX, { duration: TIMING.runBack, ease: [0.5, 0, 0.2, 1] });
@@ -397,7 +417,7 @@ export function useDeliverySequence({ layout, submit, reducedMotion }: Options) 
     } catch (e) {
       if (e !== CANCELLED) throw e;
     }
-  }, [dogX, dogOpacity, dogLean, wait, moveDog]);
+  }, [dogX, dogLean, wait, moveDog]);
 
   const noteTyping = useCallback(() => setPhase((p) => (p === "IDLE" ? "COMPOSING" : p)), []);
 

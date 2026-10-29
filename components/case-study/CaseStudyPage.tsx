@@ -2,13 +2,19 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CaseStudyData } from "@/content/case-studies/types";
 import ContactFooter from "@/components/layout/ContactFooter";
+import { caseStudySections } from "@/content/case-studies/sections";
 import Blocks from "./Blocks";
+import SideNav from "./SideNav";
 import RichText from "./RichText";
 
 export default function CaseStudyPage({ data, nextHref }: { data: CaseStudyData; nextHref: string }) {
   const { hero, next } = data;
+  const sections = caseStudySections[data.slug] ?? [];
+  const anchors: Record<number, string[]> = {};
+  sections.forEach((s) => (anchors[s.block] ??= []).push(s.id));
   return (
     <main className="bg-white">
+      {sections.length > 0 && <SideNav sections={sections} />}
       {hero && (
         <section className="relative w-full overflow-hidden" style={{ height: hero.h, background: hero.gradient ?? undefined }}>
           {hero.layers.map((l, i) =>
@@ -30,7 +36,7 @@ export default function CaseStudyPage({ data, nextHref }: { data: CaseStudyData;
         </section>
       )}
       <div className="mx-auto w-[1008px]" style={{ paddingTop: data.startGap }}>
-        <Blocks blocks={data.blocks} />
+        <Blocks blocks={data.blocks} anchors={anchors} />
       </div>
       <section className="mx-auto flex flex-col items-center" style={{ marginTop: next.gapBefore }}>
         <RichText html={next.heading} style={next.headingStyle} className="m-0 text-center" />

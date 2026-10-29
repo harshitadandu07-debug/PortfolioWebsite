@@ -1,0 +1,65 @@
+/* Homepage dark mode. ThemeCord sets data-home-theme="dark" on <html> while the homepage is mounted, so no other
+   page is affected. The page colours come from the CSS variables in globals.css; the rest are overridden here.
+   Classes are prefixed `ht-` (CSS Modules are off in this project). */
+
+:root {
+  --cord: #8a8a90;
+}
+
+html[data-home-theme="dark"] {
+  --cream: #191918;
+  --blue: #4aa3f0;
+  --gray: #a0a0a8;
+  --cord: #d4d4da;
+  color-scheme: dark;
+}
+
+html[data-home-theme="dark"] body {
+  color: #ececf0;
+}
+
+/* Colours ease over for the moment of a switch only. */
+html.ht-fade,
+html.ht-fade body,
+html.ht-fade body * {
+  transition:
+    background-color 0.55s ease,
+    color 0.55s ease,
+    border-color 0.55s ease,
+    filter 0.55s ease !important;
+}
+
+/* The logo in the nav is dark ink. */
+html[data-home-theme="dark"] header img {
+  filter: invert(1);
+}
+
+/* The page's curled paper edge is a cream picture: darken it to the page colour. */
+html[data-home-theme="dark"] .hf-curve img {
+  filter: brightness(0.1);
+}
+html[data-home-theme="dark"] .hf-blue {
+  background: #0a3d6e;
+}
+
+/* Testimonial cards */
+html[data-home-theme="dark"] .ht-card {
+  background: #1f2a37;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+html[data-home-theme="dark"] .ht-card-inner {
+  background: #23262d;
+}
+
+/* Cord focus ring, only for keyboard users */
+.ht-focus {
+  stroke: transparent;
+}
+.ht-bead:focus-visible .ht-focus {
+  stroke: currentColor;
+}
+
+/* Dark-ink logo that sits straight on the page */
+html[data-home-theme="dark"] .ht-invert {
+  filter: invert(1) hue-rotate(180deg);
+}

@@ -1,4 +1,4 @@
-export type MessagePayload = { name: string; email: string; subject: string; message: string };
+export type MessagePayload = { email: string; subject: string; message: string };
 export type SubmitMessage = (payload: MessagePayload) => Promise<void>;
 
 /**

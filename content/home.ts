@@ -1,6 +1,6 @@
 export const hero = {
   title: "Hi, I'm Harshita",
-  tagline: "a systems-oriented product designer crafting experiences that bring delight.",
+  tagline: "I turn data into meaning, tell stories through interfaces, and build systems that scale.",
   talkLink: "Talk to me",
   talkRest: " about anything design, vibe-coding or my go-to coffee order <3",
   linkedin: "https://www.linkedin.com/in/harshita-dandu/",

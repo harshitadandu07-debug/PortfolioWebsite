@@ -13,8 +13,8 @@ export default function Testimonials() {
       </div>
       <div className="mt-[103px] flex justify-center gap-[20px]">
         {testimonials.map((t) => (
-          <figure key={t.name} className="relative h-[359px] w-[330px] rounded-[8px] bg-[#e3f2ff] shadow-[0_1px_2px_rgba(85,85,85,0.25)]">
-            <div className="absolute left-[11px] top-[12px] h-[333px] w-[309px] bg-white">
+          <figure key={t.name} className="ht-card relative h-[359px] w-[330px] rounded-[8px] bg-[#e3f2ff] shadow-[0_1px_2px_rgba(85,85,85,0.25)]">
+            <div className="ht-card-inner absolute left-[11px] top-[12px] h-[333px] w-[309px] bg-white">
               <Image src="/icons/icon-blob.svg" alt="" width={55} height={43} className="absolute right-[10px] top-[8px]" />
               <figcaption className="absolute left-[27px] top-[40px] font-graphik text-brand">
                 <p className={`text-[20px] leading-[24px] ${t.nameWeight === "bold" ? "font-bold" : "font-semibold"}`}>{t.name}</p>

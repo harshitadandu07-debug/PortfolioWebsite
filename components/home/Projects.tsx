@@ -18,7 +18,7 @@ export default function Projects() {
           ))}
         </ul>
       </div>
-      <div className="mx-auto mt-[124px] grid w-[960px] grid-cols-2 gap-x-[48px] gap-y-[48px] pb-[0px]">
+      <div className="mx-auto mt-[200px] grid w-[960px] grid-cols-2 gap-x-[48px] gap-y-[48px] pb-[0px]">
         {projects.map((p) => (
           <ProjectCard key={p.slug} project={p} />
         ))}

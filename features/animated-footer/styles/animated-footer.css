@@ -423,15 +423,6 @@
 }
 
 /* compact (phone) postcard: the email gets its own line and the toolbar is trimmed so nothing collides with Send */
-.af-card[data-compact="true"] .af-row-from {
-  height: auto;
-  flex-wrap: wrap;
-  padding: calc(var(--u) * 16) 0;
-  row-gap: calc(var(--u) * 14);
-}
-.af-card[data-compact="true"] .af-row-from .af-pill-input:last-of-type {
-  flex: 1 1 100%;
-}
 .af-card[data-compact="true"] .af-toolbar {
   top: calc(var(--u) * 740);
 }

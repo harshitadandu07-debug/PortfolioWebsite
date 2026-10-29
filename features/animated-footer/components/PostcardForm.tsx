@@ -55,10 +55,9 @@ const Plane = () => (
 
 export default function PostcardForm({ phase, compact, busy, busyLabel = "Sending…", externalError, onSubmit, onFirstInput }: Props) {
   const uid = useId();
-  const [values, setValues] = useState({ name: "", email: "", subject: DEFAULT_SUBJECT, message: "" });
+  const [values, setValues] = useState({ email: "", subject: DEFAULT_SUBJECT, message: "" });
   const [error, setError] = useState<string | null>(null);
   const touched = useRef(false);
-  const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
 
@@ -74,14 +73,12 @@ export default function PostcardForm({ phase, compact, busy, busyLabel = "Sendin
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (busy) return;
-    const name = values.name.trim();
     const email = values.email.trim();
     const message = values.message.trim();
-    if (!name) return fail("Add your name so I know who to thank.", nameRef);
     if (!EMAIL_RE.test(email)) return fail("That email doesn’t look right.", emailRef);
     if (!message) return fail("Write a little something first.", messageRef);
     setError(null);
-    onSubmit({ name, email, subject: values.subject.trim() || DEFAULT_SUBJECT, message });
+    onSubmit({ email, subject: values.subject.trim() || DEFAULT_SUBJECT, message });
   };
   const fail = (text: string, ref: { current: HTMLElement | null }) => {
     setError(text);
@@ -118,14 +115,11 @@ export default function PostcardForm({ phase, compact, busy, busyLabel = "Sendin
             </div>
 
             <div className={`${styles.row} ${styles.rowFrom}`}>
-              <label className={styles.label} htmlFor={`${uid}-name`}>
+              <label className={styles.label} htmlFor={`${uid}-email`}>
                 From
               </label>
               <span className={`${styles.pill} ${styles.pillInput}`}>
-                <input id={`${uid}-name`} ref={nameRef} className={styles.input} type="text" name="name" autoComplete="name" placeholder="Your name" value={values.name} onChange={set("name")} disabled={busy} required />
-              </span>
-              <span className={`${styles.pill} ${styles.pillInput}`}>
-                <input id={`${uid}-email`} ref={emailRef} className={styles.input} type="email" name="email" autoComplete="email" placeholder="you@email.com" aria-label="Your email" value={values.email} onChange={set("email")} disabled={busy} required />
+                <input id={`${uid}-email`} ref={emailRef} className={styles.input} type="email" name="email" autoComplete="email" placeholder="you@email.com" value={values.email} onChange={set("email")} disabled={busy} required />
               </span>
             </div>
 
