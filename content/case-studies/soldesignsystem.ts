@@ -796,13 +796,13 @@ const data: CaseStudyData = {
         },
         {
           "type": "img",
-          "x": 90,
-          "y": 46,
-          "w": 285,
-          "h": 270,
+          "x": 40,
+          "y": 0,
+          "w": 404,
+          "h": 324,
           "src": "/images/case-studies/soldesignsystem/sections/section-03.png",
           "alt": "",
-          "fit": "cover",
+          "fit": "contain",
           "radius": "0px",
           "transform": null
         },
@@ -820,13 +820,13 @@ const data: CaseStudyData = {
         },
         {
           "type": "img",
-          "x": 578,
-          "y": 46,
-          "w": 377,
-          "h": 258,
+          "x": 564,
+          "y": 0,
+          "w": 404,
+          "h": 324,
           "src": "/images/case-studies/soldesignsystem/sections/section-04.png",
           "alt": "",
-          "fit": "cover",
+          "fit": "contain",
           "radius": "0px",
           "transform": null
         }
@@ -1031,6 +1031,7 @@ const data: CaseStudyData = {
         },
         {
           "type": "video",
+          "ready": true,
           "x": 142,
           "y": 84,
           "w": 724,
@@ -1114,6 +1115,7 @@ const data: CaseStudyData = {
       "children": [
         {
           "type": "video",
+          "ready": true,
           "x": -5,
           "y": 0,
           "w": 1018,
@@ -1248,6 +1250,7 @@ const data: CaseStudyData = {
       "children": [
         {
           "type": "video",
+          "ready": true,
           "x": 5,
           "y": 0,
           "w": 998,
